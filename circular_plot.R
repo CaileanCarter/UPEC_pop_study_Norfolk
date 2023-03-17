@@ -1,4 +1,3 @@
-setwd("C:/Users/carterc/OneDrive - Norwich BioScience Institutes/Data/UPEC population study/dataset/phylogeny")
 library(ape)
 library(ggplot2)
 library(ggtree)
@@ -7,13 +6,11 @@ library(ggnewscale)
 library(tidytree)
 
 
-fasta.file.name <- "corrected_core_genome_alignment.fasta"
-newick.file.name <- "corrected_core_ML_tree.nhx"
+fasta.file.name <- "core_genome_alignment.fasta"
+newick.file.name <- "core_ML_tree.nhx"
 metadata.file.name <- "tree_metadata.xlsx"
-metadata.csv <- "tree_metadata.csv"
 
 # METADATA ------------------------------------------------------
-#all.df <- read.csv(metadata.csv)
 
 all.df <- read_excel(metadata.file.name)
 #all.df <- as.data.frame(all.df)
@@ -47,7 +44,6 @@ abx.df <- as.data.frame(abx.df)
 rownames(abx.df) <- abx.df$id
 abx.df <- subset(abx.df, select = -c(id))
 
-#genes.df <- all.df[,c("id", "aac(3)-IId", "aac(3)-IIe",	"aac(6')-Ib-cr5",	"aadA2", "aadA5", "blaCARB-2", "blaCTX-M-1", "blaCTX-M-15", "blaDHA-1", "blaOXA-1", "blaSHV-1")]
 genes.df <- all.df[,c("id", "aac(6')-Ib-cr5", "blaCTX-M-1", "blaCTX-M-15", "blaOXA-1")]
 genes.df <- as.data.frame(genes.df)
 rownames(genes.df) <- genes.df$id
@@ -55,9 +51,9 @@ genes.df <- subset(genes.df, select = -c(id))
 genes.df[genes.df==0] <- NA
 genes.df[] <- lapply(genes.df, factor)
 
-TEM.df <- data.frame("id" = all.df[,c("id")], "bla" = all.df[,c("bla")])
-rownames(TEM.df) <- TEM.df$id
-TEM.df <- subset(TEM.df, select = -c(id))
+bla.df <- data.frame("id" = all.df[,c("id")], "bla" = all.df[,c("bla")])
+rownames(bla.df) <- bla.df$id
+bla.df <- subset(bla.df, select = -c(id))
 
 dfrA.df <- data.frame("id" = all.df[,c("id")], "dfrA" = all.df[,c("dfrA")])
 rownames(dfrA.df) <- dfrA.df$id
@@ -72,7 +68,6 @@ phylo.dat <- data.frame(id=c(221,250,403,406,407,425,430,217,218), Phylogroup=c(
 
 iqtree <- ape::read.tree(newick.file.name)
 gg = ggtree(iqtree, size=0.5, layout="fan", open.angle=30) %<+% all.df +
-#gg = ggtree(iqtree, size=1) %<+% all.df +
   #Colour phylogroups
   geom_hilight(
     data=phylo.dat,
@@ -113,6 +108,7 @@ geom_point2(
 geom_cladelab(node=165, label="Ref.", fontsize=4, offset.text=.01, angle=220) +
 new_scale_color()
 
+# Heatmap of source metadata
 gg <- gheatmap(
     gg, 
     source.df, 
@@ -134,6 +130,7 @@ gg <- gheatmap(
   ) + 
   new_scale_fill()
 
+# Heatmap of hospital metadata
 gg <- gheatmap(
   gg,
   hospital.df,
@@ -156,7 +153,7 @@ gg <- gheatmap(
     ) +
   new_scale_fill()
 
-  
+# Heatmap of MDR
 gg <- gheatmap(
   gg,
   mdr.df,
@@ -174,10 +171,10 @@ gg <- gheatmap(
     name = "",
     labels = c("MDR"),
     na.value = "white",
-    #guide="none",
     guide=guide_legend(title=NULL, order=5)
   ) + new_scale_fill()
 
+# Heatmap for phenotypic resistance
 gg <- gheatmap(
     gg, 
     abx.df, 
@@ -201,7 +198,7 @@ gg <- gheatmap(
     guide=guide_legend(order=6)
   ) + new_scale_fill()
   
-
+# Heatmap for AMR determinants presences
 gg <- gheatmap(
   gg,
   genes.df,
@@ -223,10 +220,10 @@ gg <- gheatmap(
   )+
   new_scale_fill()
 
-
+# Heatmap of Beta-lactamase presence
 gg <- gheatmap(
   gg,
-  TEM.df,
+  bla.df,
   offset=0.32,
   width=0.05,
   colnames_position = 'top',
@@ -254,6 +251,7 @@ gg <- gheatmap(
     guide=guide_legend(label.hjust = 0, ncol=2, order=8)
   ) + new_scale_fill()
 
+# Heatmap of dfrA presence
 gg <- gheatmap(
   gg,
   dfrA.df,
@@ -285,7 +283,7 @@ gg <- gheatmap(
     guide=guide_legend(label.hjust = 0, ncol=2, order=9)
     )+ new_scale_fill()
 
-
+# Labelling sequence types
  gg <- gg + geom_cladelab(
     data = stnode.df,
     mapping = aes(
@@ -315,9 +313,7 @@ gg <- gheatmap(
   theme(
     legend.text = element_text(size=9),
     legend.title = element_text(size=11),
-    #legend.justification = "left",
     legend.box="vertical",
-    #legend.position = "bottom",
     legend.direction="vertical",
     legend.background = element_rect(),
     legend.key.size = unit(0.3, 'cm')
@@ -326,11 +322,10 @@ gg <- gheatmap(
 
 gg
 
-ggsave(
-  "extended_circular_phylogenomic_tree.png",
-  last_plot(),
-  device="png",
-  width=14,
-  height=12,
-  # units='px'
-)
+# ggsave(
+#   "extended_circular_phylogenomic_tree.png",
+#   last_plot(),
+#   device="png",
+#   width=14,
+#   height=12,
+# )
